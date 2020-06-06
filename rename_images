@@ -1,0 +1,51 @@
+#to run copy below line
+# python path-to-file\rename_images.py
+# renames images for easier parsing for a fast.ai project
+# the images were taken from a saved html page from a google search
+
+import re
+from os import walk
+import os
+
+match_image = re.compile(r'images.*')
+
+location = 'path-to-files\\'
+
+def getFiles():
+    #get the necessary files in a list
+
+    #file=open(location)
+    file_list = []
+    for (dir_path, dir_names, file_names) in walk(location):
+        file_list.extend(file_names)
+        break
+    return file_list
+
+def replace_file(location, file):
+    #find if the file is actually an image ie does it need a replacement name
+    if (match_image.match(file)):
+        new_name = name_change(file)
+        os.rename(location+file,location+new_name)
+        print(location+new_name)
+
+def name_change(file_name):
+    #changes the name, it should already be matched if it makes it here
+    new_name = ""
+    replacement = "ultimate_"
+    # this is a magic number, the initial name is either images or image(#)
+    # it's a short script, but it works
+    if(len(file_name)<7):
+        new_name += replacement + file_name + "_0.jpg"
+    else:
+        new_name += replacement + file_name
+        new_name = new_name.replace("(", "_")
+        new_name = new_name.replace(")", ".jpg")
+    return new_name
+
+def changeFiles(location, file_list):
+    #takes the location and list and iterates over them, passing each to
+    #replace the actual files
+    for file in file_list:
+        replace_file(location, file)
+
+changeFiles(location, getFiles())

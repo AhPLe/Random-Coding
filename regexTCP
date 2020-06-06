@@ -1,0 +1,91 @@
+#to run copy below line
+# python path-to-file\regexTCP.py
+# This program iterates over a sequence of acks and compiles them into a ack_list
+# this was helpful for a TCP trace to see which Sequence/Acks were repeated
+
+import re
+import hashlib
+normal_max =3;
+seqDict = dict()
+multiples = []
+
+ack_index = re.compile('(Ack=(?!1 )(?!0 )\d+)|(Seq=(?!1 )(?!0 )\d+)')
+
+def readfile():
+    location = r'path-to-files\ArthurLeBlancWiresharkTCPCapture.txt'
+    #location = os.path.join(folder, location)
+    file=open(location)
+    data = file.read()
+    file.close()
+    return data
+
+def extract(seq_num):
+    #adds the sequence number to the dict and returns if it is already in the dict
+    exists = True
+    if (not seq_num in seqDict):
+        seqDict[seq_num] = 1
+        exists = False
+    else:
+        seqDict[seq_num] = seqDict[seq_num] + 1
+
+    if seqDict[seq_num] > 2:
+        multiples.append(seq_num)
+    return exists
+
+
+def firstOrSecond(ackTuple):
+    if (len(ackTuple[0])>0):
+        return 0
+    else:
+        return 1
+
+text_file = readfile()
+#print (readfile())
+
+line_texts = text_file.split('\n')
+#ack_list = text_type.split(text_file)
+#destination = re.compile('')
+count = 0
+move_index = 4
+normal_ack = []
+count_normal = -1
+odd_ack = []
+count_odd = -1
+
+for line in line_texts:
+    print('-------------LINE', count)
+    count += 1
+    indices_match = ack_index.findall(line)
+    print(line)
+
+    odd_appended = False;
+
+    for indices in indices_match:
+        print(indices_match)
+
+        if (indices != None):
+            print(indices)
+
+            if (len(indices_match) <2):
+                seq_num = indices[firstOrSecond(indices)][move_index:]
+                if (extract(seq_num)):
+                    normal_ack.append(seq_num)
+                    print(normal_ack[count_normal])
+                    count_normal += 1
+
+
+            else:
+                if (not odd_appended):
+                    odd_ack.append([indices[firstOrSecond(indices)][move_index:]])
+                    odd_appended = True
+                    count_odd += 1
+                else:
+                    odd_ack[count_odd].append(indices[firstOrSecond(indices)][move_index:])
+
+            indices_match
+
+    #print(value)
+print(normal_ack)
+print(odd_ack)
+for seq in normal_ack:
+    print(seqDict[seq])

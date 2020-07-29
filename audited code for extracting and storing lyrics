@@ -94,7 +94,6 @@ import json # it was a notebook, occasionally executed them in a different order
 
 import time
 
-
 for i in range(len(songs)): #using numbers so the program can be controlled instead of issuing 500 pull requests
     song = songs[i][0]
     if i < 400: #this line was used to limit the number of requests made
@@ -102,10 +101,27 @@ for i in range(len(songs)): #using numbers so the program can be controlled inst
         if not os.path.exists(os.path.join(storage, file_name)): # make sure the lyrics aren't already pulled in before making the request
             try:
                 response = getSong(artist_replace, song)
-
             
                 with open(os.path.join(storage, file_name), 'w+', encoding="utf-8", errors = 'namereplace') as f:
                     f.write(json.dumps(response.json()))
             except e:
                 print(e)
                 print(' on file ' + file_name)
+
+#error checking
+#check that all songs that were collected have a valid status:
+bad = []
+for i in range(len(songs)): #using numbers so the program can be controlled instead of issuing 500 pull requests
+    song = songs[i][0]
+    if i < 400: #this line was used to limit the number of requests made
+        file_name = 'lyrics-'+makeValidFile(song)+'_'+makeValidFile(artist)+'.json' 
+        if not os.path.exists(os.path.join(storage, file_name)):
+            print('path does not exist for ' + file_name)
+        else:
+            with open(os.path.join(storage, file_name), mode='r', encoding='utf-8', errors='namereplace') as f:
+                song_json = json.loads(f.read())
+            print(file_name)
+            print(song_json['status'])
+            if (song_json['status'] == '404'):
+                bad.append(file_name)
+print(bad)

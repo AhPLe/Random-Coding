@@ -1,0 +1,111 @@
+#Python 3 Jupyter notebooks code for editing and storing lyrics. Part of a larger project that may end up going into a repository itself.
+#The larger project involves a copycat form of https://pudding.cool/2017/05/song-repetition/
+#but depending on what I can access, it may evolve into a different form and/or more information than that specific site.
+
+# file for pulling and getting requests for a music lyric analysis project - code has been filtered of most drive, directory, and password/key references
+# this is formatted poorly due to starting out as a notebook
+
+song_date_raw = r'BeatlesSongDates-raw.txt'
+with open(song_date_raw, 'r') as f:
+    text = f.read()
+lines = text.split('\n')
+
+import re
+
+song_re = re.compile('(?:")(.+?)(?:")')
+
+song_date = []
+unmatched_song_date = []
+index = 0
+for line in lines:
+    parts = line.split('\t')
+    if parts[0] != '0' and parts[0] != '':
+        match = song_re.match(parts[0])
+        if match:
+            name = match.group()
+            name = name[1:len(name)-1]
+            #print(name)
+            date = parts[1]
+            name_date = [name, date]
+            song_date.append(name_date)
+        else:
+            unmatched_song_date = [parts[0], parts[1]]
+
+print('unmatched songs and dates:')
+print(unmatched_song_date)
+print('songs and dates:')
+print(song_date)
+
+import json
+
+with open('BeatlesSongDates.txt', 'w+', encoding='utf-8') as f:
+    f.write(json.dumps({'songs': song_date, 'artist': 'The Beatles'})) # written in this way to keep the json format and allow the artist to exist in the same file
+
+with open('BeatlesSongDates_Unmatched.txt', 'w+', encoding='utf-8') as f:
+    f.write(json.dumps({'songs': unmatched_song_date, 'artist': 'The Beatles'}))
+    
+with open('BeatlesSongDates.txt', 'r', encoding='utf-8') as f:
+    obj = json.loads(f.read())
+
+artist = obj['artist'] # to double-check the json was loaded correctly
+print(artist)
+
+import os
+current = os.getcwd()
+os.chdir('D:')
+correct = 'correctstorage'
+if (os.getcwd() != 'folderto\\' + correct):
+    
+    if (os.getcwd() != 'D:\\folderto\\'):
+        os.chdir('folderto\\')
+    if not os.path.isdir():
+        os.mkdir(correct)
+    os.chdir(correct)
+
+storage = os.getcwd()
+#with open('TestingJ.json', 'w+', encoding="utf-8", errors = 'namereplace') as f:
+#    f.write(json.dumps(song_date))
+os.chdir(current)
+
+songs = obj['songs']
+artist = obj['artist']
+artist_replace = artist.replace(' ', '%2520')
+
+import requests
+
+headers = {
+    'x-rapidapi-host': "canarado-lyrics.p.rapidapi.com", # api worked great, but you will need to get your own key
+    'x-rapidapi-key': "not-a-working-key"
+    }
+def getSong(artist_html, song):
+    url = "https://canarado-lyrics.p.rapidapi.com/lyrics/"+song+"%2520"+artist_html
+    response = requests.request("GET", url, headers=headers)
+    return response
+#response = getsong(artist_replace, song)
+
+import re
+valid_filename = re.compile(r'[\\\/\:\*\?"<>\|]') # allow the deletion of all nonusable filenames for the song in question
+def makeValidFile(name):
+    return valid_filename.sub(' ', name)
+    
+# now that the beatles song and dates are in obj, the songs can be transferred to the song extractor program
+import json # it was a notebook, occasionally executed them in a different order/had an error for debugging
+
+
+import time
+
+
+for i in range(len(songs)): #using numbers so the program can be controlled instead of issuing 500 pull requests
+    song = songs[i][0]
+    if i < 400: #this line was used to limit the number of requests made
+        file_name = 'lyrics-'+makeValidFile(song)+' '+makeValidFile(artist)+'.json' 
+        if not os.path.exists(os.path.join(storage, file_name)): # make sure the lyrics aren't already pulled in before making the request
+            try:
+                response = getSong(artist_replace, song)
+
+            
+                with open(os.path.join(storage, file_name), 'w+', encoding="utf-8", errors = 'namereplace') as f:
+                    f.write(json.dumps(response.json()))
+            except e:
+                print(e)
+                print(' on file ' + file_name)

@@ -1,0 +1,46 @@
+#Lempel Ziv algorithm for list spaced lyrical words
+#Was not intended for compression, but the items contain the necessary information for compressing [number, item_number, previous_item, word_added]
+
+def LZPy_list(lyrics_list):
+    test_make = 0
+    near_end = False
+    lyr_dict = {}
+    pos = 0
+    lngth = 1
+    item_num = 0
+    prev_item = None
+    while pos + 1< len(lyrics_list):
+        prefix = ''
+        for i in range(lngth):
+            prefix += lyrics_list[pos + i] + ' '
+        prefix = prefix.rstrip(' ')
+        
+        while pos + lngth >= len(lyrics_list):
+            lngth -= 1
+            near_end = True
+        if (near_end):
+            if lyr_dict.get(prefix):
+                lyr_dict[prefix][0] += 1
+                prev_item = lyr_dict[prefix][1]
+            else:
+                lyr_dict[prefix] = [1, item_num, prev_item, lyrics_list[pos+lngth]]
+                item_num += 1
+                prev_item = None
+            return lyr_dict
+        
+        if lyr_dict.get(prefix):
+            #lyr_dict[prefix] += 1
+            lngth += 1
+            prev_item = lyr_dict[prefix][1]
+            #pos += lngth
+        else:
+            if prev_item == None:
+                lyr_dict[prefix] = [1, item_num, prev_item, prefix]
+            else:    
+                lyr_dict[prefix] = [1, item_num, prev_item, lyrics_list[pos+lngth]]
+            item_num += 1
+            prev_item = None
+            pos += lngth
+            lngth = 1
+    return lyr_dict
+        
